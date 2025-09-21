@@ -1,13 +1,11 @@
-# src/lambdas/app.py
 import json, os, urllib.parse, boto3
 from pypdf import PdfReader
-from openai import OpenAI
-from pinecone import Pinecone
+import requests
 
 DOCS_BUCKET      = os.environ["DOCS_BUCKET"]
 OPENAI_API_KEY   = os.environ["OPENAI_API_KEY"]
 PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
-PINECONE_INDEX   = os.environ["PINECONE_INDEX"]
+PINECONE_INDEX   = os.environ["PINECONE_INDEX"]  # e.g., aws-rag-dev-docs
 
 s3 = boto3.client("s3")
 
@@ -23,35 +21,41 @@ def _read_text(bucket, key):
 def _chunk(text: str, chunk_size=900, overlap=150):
     if not text:
         return []
-    chunks = []
-    start = 0
-    n = len(text)
+    chunks, start, n = [], 0, len(text)
     while start < n:
         end = min(start + chunk_size, n)
-        chunks.append(text[start:end])
+        piece = text[start:end].strip()
+        if piece:
+            chunks.append(piece)
         if end == n:
             break
         start = max(end - overlap, 0)
-    return [c.strip() for c in chunks if c.strip()]
+    return chunks
 
-def _embed(texts):
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    resp = client.embeddings.create(model="text-embedding-3-small", input=texts)
-    return [d.embedding for d in resp.data]  # 1536-dim
+def _embed_texts(texts):
+    url = "https://api.openai.com/v1/embeddings"
+    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
+    # Batch in groups to keep payloads sane if needed; start simple
+    body = {"model": "text-embedding-3-small", "input": texts}
+    r = requests.post(url, headers=headers, json=body, timeout=30)
+    r.raise_for_status()
+    data = r.json()
+    # returns list of {embedding: [...], index: i}
+    return [d["embedding"] for d in data["data"]]
 
-def _upsert_pinecone(vectors):
-    pc = Pinecone(api_key=PINECONE_API_KEY)
-    index = pc.Index(PINECONE_INDEX)
-    index.upsert(vectors=vectors)
+def _pinecone_upsert(vectors):
+    # serverless write endpoint format:
+    # https://api.pinecone.io/indexes/{index_name}/vectors/upsert
+    url = f"https://api.pinecone.io/indexes/{PINECONE_INDEX}/vectors/upsert"
+    headers = {"Api-Key": PINECONE_API_KEY, "Content-Type": "application/json"}
+    payload = {"vectors": [{"id": vid, "values": values, "metadata": meta} for vid, values, meta in vectors]}
+    r = requests.post(url, headers=headers, json=payload, timeout=30)
+    r.raise_for_status()
+    return r.json()
 
 def lambda_handler(event, context):
-    # Optional: quick diagnostics if needed
-    # import sys, os
-    # print("SYS.PATH:", sys.path)
-    # print("LAYER EXISTS:", os.path.isdir("/opt/python"))
-
     records = event.get("Records", [])
-    total = 0
+    total_chunks = 0
     for r in records:
         bucket = r["s3"]["bucket"]["name"]
         key = urllib.parse.unquote_plus(r["s3"]["object"]["key"])
@@ -59,9 +63,8 @@ def lambda_handler(event, context):
         chunks = _chunk(text)
         if not chunks:
             continue
-        embs = _embed(chunks)
-        vectors = [(f"{key}::{i}", e, {"text": c, "s3_key": key}) for i, (c, e) in enumerate(zip(chunks, embs))]
-        _upsert_pinecone(vectors)
-        total += len(chunks)
-
-    return {"statusCode": 200, "body": json.dumps({"message": "embedded", "chunks": total})}
+        embs = _embed_texts(chunks)
+        vectors = [(f"{key}::{i}", emb, {"text": chunk, "s3_key": key}) for i, (chunk, emb) in enumerate(zip(chunks, embs))]
+        _pinecone_upsert(vectors)
+        total_chunks += len(chunks)
+    return {"statusCode": 200, "body": json.dumps({"message":"embedded", "chunks": total_chunks})}
