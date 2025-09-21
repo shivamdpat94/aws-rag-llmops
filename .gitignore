@@ -28,8 +28,10 @@ Thumbs.db
 terraform.tfvars
 
 
-terraform.tfstate
-terraform.tfstate.backup
-*.tfstate
-*.tfstate.*
-crash.log
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars
+terraform/*.zip
+terraform/build/
