@@ -1,37 +1,9 @@
-# Terraform
-**/.terraform/
-*.tfstate
-*.tfstate.*
-crash.log
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
-.terraform.lock.hcl
-
-# Lambda build artifacts
-**/__pycache__/
-**/*.pyc
-terraform/build/
-src/lambdas/*.zip
-
-# Python virtualenvs
-.venv/
-venv/
-env/
-
-# OS/editor
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-terraform.tfvars
-
-
-# Terraform
-terraform/.terraform/
+﻿terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.*
 terraform/terraform.tfvars
-terraform/*.zip
 terraform/build/
+terraform/*.zip
+dependencies/
+src/lambdas/python/
+test/
