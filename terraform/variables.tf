@@ -18,9 +18,9 @@ variable "openai_api_key" {
 }
 
 variable "pinecone_api_key" {
-  type = string 
+  type = string
 }
 
-variable "pinecone_env" { 
-  type = string 
+variable "pinecone_env" {
+  type = string
 }

@@ -28,13 +28,13 @@ resource "aws_lambda_function" "app" {
 
   layers = [aws_lambda_layer_version.common_deps.arn]
 
-environment {
-  variables = {
-    DOCS_BUCKET      = aws_s3_bucket.docs.bucket
-    OPENAI_API_KEY   = var.openai_api_key
-    PINECONE_API_KEY = var.pinecone_api_key
-    PINECONE_ENV     = var.pinecone_env      # e.g., "us-east-1-aws"
-    PINECONE_INDEX   = "${local.name_prefix}-docs"
+  environment {
+    variables = {
+      DOCS_BUCKET      = aws_s3_bucket.docs.bucket
+      OPENAI_API_KEY   = var.openai_api_key
+      PINECONE_API_KEY = var.pinecone_api_key
+      PINECONE_ENV     = var.pinecone_env # e.g., "us-east-1-aws"
+      PINECONE_INDEX   = "${local.name_prefix}-docs"
     }
   }
 }
