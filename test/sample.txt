@@ -1,1 +1,1 @@
-﻿RAG pipelines on AWS with Lambda and Pinecone.
+﻿End-to-end test

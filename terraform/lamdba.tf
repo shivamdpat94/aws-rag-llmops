@@ -26,16 +26,22 @@ resource "aws_lambda_function" "app" {
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
-# layers = [aws_lambda_layer_version.common_deps.arn]
-layers = []
+  layers = [aws_lambda_layer_version.common_deps.arn]
 
-  environment {
-    variables = {
-      DOCS_BUCKET      = aws_s3_bucket.docs.bucket
-      OPENAI_API_KEY   = var.openai_api_key
-      PINECONE_API_KEY = var.pinecone_api_key
-      PINECONE_ENV     = var.pinecone_env # e.g., "us-east-1-aws"
-      PINECONE_INDEX   = "${local.name_prefix}-docs"
-    }
+environment {
+  variables = {
+    DOCS_BUCKET      = aws_s3_bucket.docs.bucket
+    OPENAI_API_KEY   = var.openai_api_key
+    PINECONE_API_KEY = var.pinecone_api_key
+    PINECONE_ENV     = var.pinecone_env
+    PINECONE_INDEX   = "${local.name_prefix}-docs"
+
+    # NEW — tame the embedding burst while testing
+    EMB_MODEL        = "text-embedding-3-small"
+    EMB_BATCH_SIZE   = "8"
+    EMB_MAX_RETRIES  = "6"
   }
+}
+
+
 }
