@@ -26,3 +26,10 @@ Thumbs.db
 .idea/
 .vscode/
 terraform.tfvars
+
+
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+crash.log
