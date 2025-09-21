@@ -26,7 +26,8 @@ resource "aws_lambda_function" "app" {
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
-  layers = [aws_lambda_layer_version.common_deps.arn]
+# layers = [aws_lambda_layer_version.common_deps.arn]
+layers = []
 
   environment {
     variables = {

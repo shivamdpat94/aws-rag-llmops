@@ -1,7 +1,7 @@
-import json, os, urllib.parse, boto3
-from pypdf import PdfReader
-import requests
+# at top of app.py
+import json, os, urllib.parse, boto3, requests
 
+print("BOOT OK: app.py loaded")
 DOCS_BUCKET      = os.environ["DOCS_BUCKET"]
 OPENAI_API_KEY   = os.environ["OPENAI_API_KEY"]
 PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
