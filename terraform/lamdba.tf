@@ -35,6 +35,9 @@ environment {
     PINECONE_API_KEY = var.pinecone_api_key
     PINECONE_ENV     = var.pinecone_env
     PINECONE_INDEX   = "${local.name_prefix}-docs"
+    PINECONE_PROJECT = "dykrvkj"   # <-- from whoami
+    PINECONE_HOST =    "https://index1-dykrvkj.svc.aped-4627-b74a.pinecone.io"
+
 
     # NEW — tame the embedding burst while testing
     EMB_MODEL        = "text-embedding-3-small"
